@@ -25,10 +25,10 @@ function interpolateRow(row: (number | null)[]): number[] {
       } else if (i === 0 || result[i - 1] === null) {
         result[i] = result[nextKnown]
       } else {
-        const prev = result[i - 1] as number
-        const next = result[nextKnown] as number
-        const steps = nextKnown - (i - 1)
-        result[i] = prev + (next - prev) * (1 / steps)
+        const prev = result[i - 1] as number;
+        const next = result[nextKnown] as number;
+        const steps = nextKnown - (i - 1);
+        result[i] = prev + (next - prev) * (1 / steps);
       }
     }
   }
@@ -37,8 +37,8 @@ function interpolateRow(row: (number | null)[]): number[] {
 }
 
 function SmileChart({ expiry }: { expiry: IvExpiry }) {
-  const puts = expiry.points.filter(p => p.type === 'put').sort((a, b) => a.strike - b.strike)
-  const calls = expiry.points.filter(p => p.type === 'call').sort((a, b) => a.strike - b.strike)
+  const puts = expiry.points.filter(p => p.type === 'put').sort((a, b) => a.strike - b.strike);
+  const calls = expiry.points.filter(p => p.type === 'call').sort((a, b) => a.strike - b.strike);
 
   return (
     <Plot
@@ -157,7 +157,7 @@ function SurfaceChart({ surface, selectedExpiry }: Props) {
 
 export default function VolSurface({ surface, selectedExpiry }: Props) {
   if (selectedExpiry) {
-    const expiry = surface.expiries.find(e => e.expiry === selectedExpiry)
+    const expiry = surface.expiries.find(e => e.expiry === selectedExpiry);
     if (expiry) return (
       <div style={{ background: '#1a1a2e', border: '1px solid #2a2a4a', borderRadius: '8px', padding: '16px' }}>
         <SmileChart expiry={expiry} />

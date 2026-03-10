@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import VolSurface from './components/VolSurface'
 import SurfaceStats from './components/SurfaceStats'
 import ExpirySelector from './components/ExpirySelector'
@@ -32,20 +32,40 @@ function App() {
   const [error, setError] = useState<string | null>(null)
   const [selectedExpiry, setSelectedExpiry] = useState<string | null>(null)
   const [currency, setCurrency] = useState('BTC')
+  const surfaceCache = useRef<Record<string, {data : IvSurface; fetched: number}>>({})
 
   useEffect(() => {
     const fetchSurface = async () => {
       try {
-        setLoading(true)
-        setError(null)
-        setSurface(null)
-        setSelectedExpiry(null)
+        setLoading(true);
+        setError(null);
+        setSurface(null);
+        setSelectedExpiry(null);
+
+        const cached = surfaceCache.current[currency];
+        const fiveMinutes  = 5 * 60 * 1000;
+        
+        if(cached && Date.now() - cached.fetched < fiveMinutes){
+            console.log("cache working");
+            setSurface(cached.data);
+            setLoading(false);
+            return
+        }
+
+
+        // No cache
+        console.log("No cache");
 
         const response = await fetch(`https://localhost:51979/api/ivsurface?currency=${currency}`)
         const data: IvSurface = await response.json()
-        setSurface(data)
+        surfaceCache.current[currency] = {
+          data,
+          fetched: Date.now()
+        }
+
+        setSurface(data);
       } catch (err) {
-        setError('Failed to fetch surface data. Is the API running?')
+        setError('Failed to fetch surface data. Is the API running?');
       } finally {
         setLoading(false)
       }
