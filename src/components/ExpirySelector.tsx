@@ -1,4 +1,4 @@
-import type { IvExpiry } from '../App'
+import type { IvExpiry } from '../types'
 
 interface Props {
   expiries: IvExpiry[]

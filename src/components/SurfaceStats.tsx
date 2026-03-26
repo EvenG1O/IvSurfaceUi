@@ -1,4 +1,4 @@
-import type { IvSurface } from '../App'
+import type { IvSurface } from '../types'
 
 interface Props {
   surface: IvSurface

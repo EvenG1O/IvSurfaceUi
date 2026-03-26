@@ -1,44 +1,15 @@
 import Plot from 'react-plotly.js'
-import type { IvSurface, IvExpiry } from '../App'
+import type { IvSurface, IvExpiry } from '../types'
+import { interpolateRow } from '../utils/interpolation'
 
 interface Props {
   surface: IvSurface
   selectedExpiry: string | null
 }
 
-
-function interpolateRow(row: (number | null)[]): number[] {
-  const result = [...row]
-
-  const firstKnown = result.findIndex(v => v !== null)
-  if (firstKnown === -1) return result.map(() => 0)
-
-  for (let i = 0; i < result.length; i++) {
-    if (result[i] === null) {
-      let nextKnown = -1
-      for (let j = i + 1; j < result.length; j++) {
-        if (result[j] !== null) { nextKnown = j; break }
-      }
-
-      if (nextKnown === -1) {
-        result[i] = result[i - 1]
-      } else if (i === 0 || result[i - 1] === null) {
-        result[i] = result[nextKnown]
-      } else {
-        const prev = result[i - 1] as number;
-        const next = result[nextKnown] as number;
-        const steps = nextKnown - (i - 1);
-        result[i] = prev + (next - prev) * (1 / steps);
-      }
-    }
-  }
-
-  return result as number[]
-}
-
 function SmileChart({ expiry }: { expiry: IvExpiry }) {
-  const puts = expiry.points.filter(p => p.type === 'put').sort((a, b) => a.strike - b.strike);
-  const calls = expiry.points.filter(p => p.type === 'call').sort((a, b) => a.strike - b.strike);
+  const puts = expiry.points.filter((p) => p.type === 'put').sort((a, b) => a.strike - b.strike);
+  const calls = expiry.points.filter((p) => p.type === 'call').sort((a, b) => a.strike - b.strike);
 
   return (
     <Plot
@@ -47,8 +18,8 @@ function SmileChart({ expiry }: { expiry: IvExpiry }) {
           type: 'scatter',
           mode: 'lines+markers',
           name: 'Puts',
-          x: puts.map(p => p.strike),
-          y: puts.map(p => p.iv),
+          x: puts.map((p) => p.strike),
+          y: puts.map((p) => p.iv),
           line: { color: '#ff6b6b', width: 2 },
           marker: { size: 6 },
           hovertemplate: 'Strike: $%{x}<br>IV: %{y:.2f}%<extra>Put</extra>'
@@ -57,8 +28,8 @@ function SmileChart({ expiry }: { expiry: IvExpiry }) {
           type: 'scatter',
           mode: 'lines+markers',
           name: 'Calls',
-          x: calls.map(p => p.strike),
-          y: calls.map(p => p.iv),
+          x: calls.map((p) => p.strike),
+          y: calls.map((p) => p.iv),
           line: { color: '#4a9eff', width: 2 },
           marker: { size: 6 },
           hovertemplate: 'Strike: $%{x}<br>IV: %{y:.2f}%<extra>Call</extra>'
@@ -98,21 +69,20 @@ function SmileChart({ expiry }: { expiry: IvExpiry }) {
 
 function SurfaceChart({ surface, selectedExpiry }: Props) {
   const expiries = selectedExpiry
-    ? surface.expiries.filter(e => e.expiry === selectedExpiry)
+    ? surface.expiries.filter((e) => e.expiry === selectedExpiry)
     : surface.expiries
 
   const allStrikes = [...new Set(
-    expiries.flatMap(e => e.points.map(p => p.strike))
+    expiries.flatMap((e) => e.points.map((p) => p.strike))
   )].sort((a, b) => a - b)
 
-  const expiryLabels = expiries.map(e =>
+  const expiryLabels = expiries.map((e) =>
     new Date(e.expiry).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
   )
 
-  
-  const zMatrix = expiries.map(expiry => {
-    const raw = allStrikes.map(strike => {
-      const point = expiry.points.find(p => p.strike === strike)
+  const zMatrix = expiries.map((expiry) => {
+    const raw = allStrikes.map((strike) => {
+      const point = expiry.points.find((p) => p.strike === strike)
       return point ? point.iv : null
     })
     return interpolateRow(raw)
@@ -157,7 +127,7 @@ function SurfaceChart({ surface, selectedExpiry }: Props) {
 
 export default function VolSurface({ surface, selectedExpiry }: Props) {
   if (selectedExpiry) {
-    const expiry = surface.expiries.find(e => e.expiry === selectedExpiry);
+    const expiry = surface.expiries.find((e) => e.expiry === selectedExpiry);
     if (expiry) return (
       <div style={{ background: '#1a1a2e', border: '1px solid #2a2a4a', borderRadius: '8px', padding: '16px' }}>
         <SmileChart expiry={expiry} />
