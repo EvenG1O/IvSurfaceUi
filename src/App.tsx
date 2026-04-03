@@ -3,6 +3,7 @@ import VolSurface from './components/VolSurface'
 import SurfaceStats from './components/SurfaceStats'
 import ExpirySelector from './components/ExpirySelector'
 import { useSurfaceData } from './hooks/useSurfaceData'
+import './App.css'
 import './index.css'
 
 const CURRENCIES = ['BTC', 'ETH'] as const
@@ -13,48 +14,52 @@ function App() {
   const { surface, loading, error } = useSurfaceData(currency)
 
   return (
-    <div style={{ padding: '24px', maxWidth: '1400px', margin: '0 auto' }}>
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
-        <h1 style={{ fontSize: '24px' }}>
-          {currency} Implied Volatility Surface
-        </h1>
-        <div style={{ display: 'flex', gap: '8px' }}>
+    <div className="app-shell">
+      {/* ── Header ── */}
+      <header className="app-header">
+        <div className="app-title-group">
+          <h1 className="app-title">{currency} Implied Volatility Surface</h1>
+          <span className="app-badge">
+            <span className="pulse-dot" />
+            Deribit
+          </span>
+        </div>
+
+        <div className="currency-toggle">
           {CURRENCIES.map(c => (
             <button
               key={c}
               onClick={() => setCurrency(c)}
-              style={{
-                padding: '8px 20px',
-                borderRadius: '6px',
-                border: '1px solid #2a2a4a',
-                cursor: 'pointer',
-                fontWeight: 600,
-                fontSize: '14px',
-                background: currency === c ? '#4a9eff' : '#1a1a2e',
-                color: currency === c ? '#ffffff' : '#888888',
-                transition: 'all 0.2s'
-              }}
+              className={`currency-toggle__btn ${currency === c ? 'currency-toggle__btn--active' : ''}`}
             >
               {c}
             </button>
           ))}
         </div>
-      </div>
+      </header>
 
+      {/* ── Loading ── */}
       {loading && (
-        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '400px' }}>
-          <p style={{ color: '#4a9eff', fontSize: '18px' }}>⏳ Fetching {currency} IV Surface from Deribit...</p>
+        <div className="loading-state">
+          <div className="spinner" />
+          <p className="loading-state__text">Fetching {currency} IV surface from Deribit…</p>
         </div>
       )}
 
+      {/* ── Error ── */}
       {error && (
-        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '400px' }}>
-          <p style={{ color: '#ff4a4a', fontSize: '18px' }}>❌ {error}</p>
+        <div className="error-state">
+          <div className="error-state__icon">!</div>
+          <p className="error-state__text">
+            <strong>Connection failed</strong><br />
+            {error}
+          </p>
         </div>
       )}
 
+      {/* ── Data loaded ── */}
       {surface && !loading && (
-        <>
+        <div className="fade-in">
           <SurfaceStats surface={surface} />
           <ExpirySelector
             expiries={surface.expiries}
@@ -65,7 +70,7 @@ function App() {
             surface={surface}
             selectedExpiry={selectedExpiry}
           />
-        </>
+        </div>
       )}
     </div>
   )

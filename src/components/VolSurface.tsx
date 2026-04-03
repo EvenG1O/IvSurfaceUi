@@ -1,11 +1,16 @@
 import Plot from 'react-plotly.js'
 import type { IvSurface, IvExpiry } from '../types'
-import { interpolateRow } from '../utils/interpolation'
+import { interpolateSurface } from '../utils/interpolation'
 
 interface Props {
   surface: IvSurface
   selectedExpiry: string | null
 }
+
+const CHART_BG = 'rgba(14, 14, 26, 0.0)'
+const SCENE_BG = '#0a0a14'
+const GRID_COLOR = 'rgba(74, 158, 255, 0.06)'
+const FONT_COLOR = '#a0a0b8'
 
 function SmileChart({ expiry }: { expiry: IvExpiry }) {
   const puts = expiry.points.filter((p) => p.type === 'put').sort((a, b) => a.strike - b.strike);
@@ -20,9 +25,9 @@ function SmileChart({ expiry }: { expiry: IvExpiry }) {
           name: 'Puts',
           x: puts.map((p) => p.strike),
           y: puts.map((p) => p.iv),
-          line: { color: '#ff6b6b', width: 2 },
-          marker: { size: 6 },
-          hovertemplate: 'Strike: $%{x}<br>IV: %{y:.2f}%<extra>Put</extra>'
+          line: { color: '#f87171', width: 2.5, shape: 'spline' },
+          marker: { size: 5, color: '#f87171', line: { color: 'rgba(248,113,113,0.3)', width: 2 } },
+          hovertemplate: 'Strike: $%{x:,.0f}<br>IV: %{y:.2f}%<extra>Put</extra>'
         },
         {
           type: 'scatter',
@@ -30,38 +35,49 @@ function SmileChart({ expiry }: { expiry: IvExpiry }) {
           name: 'Calls',
           x: calls.map((p) => p.strike),
           y: calls.map((p) => p.iv),
-          line: { color: '#4a9eff', width: 2 },
-          marker: { size: 6 },
-          hovertemplate: 'Strike: $%{x}<br>IV: %{y:.2f}%<extra>Call</extra>'
+          line: { color: '#60a5fa', width: 2.5, shape: 'spline' },
+          marker: { size: 5, color: '#60a5fa', line: { color: 'rgba(96,165,250,0.3)', width: 2 } },
+          hovertemplate: 'Strike: $%{x:,.0f}<br>IV: %{y:.2f}%<extra>Call</extra>'
         }
       ]}
       layout={{
         autosize: true,
-        height: 500,
-        paper_bgcolor: '#1a1a2e',
-        plot_bgcolor: '#1a1a2e',
-        font: { color: '#e0e0e0' },
+        height: 480,
+        paper_bgcolor: CHART_BG,
+        plot_bgcolor: CHART_BG,
+        font: { color: FONT_COLOR, family: 'Inter, sans-serif', size: 12 },
         title: {
           text: `Vol Smile — ${new Date(expiry.expiry).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}`,
-          font: { color: '#ffffff', size: 16 }
+          font: { color: '#ffffff', size: 15, family: 'Inter, sans-serif' },
+          y: 0.96
         },
         xaxis: {
-          title: { text: 'Strike ($)' },
-          gridcolor: '#2a2a4a',
-          color: '#e0e0e0',
+          title: { text: 'Strike ($)', standoff: 12 },
+          gridcolor: GRID_COLOR,
+          zerolinecolor: GRID_COLOR,
+          color: FONT_COLOR,
           tickformat: ',.0f'
         },
         yaxis: {
-          title: { text: 'IV %' },
-          gridcolor: '#2a2a4a',
-          color: '#e0e0e0'
+          title: { text: 'IV %', standoff: 12 },
+          gridcolor: GRID_COLOR,
+          zerolinecolor: GRID_COLOR,
+          color: FONT_COLOR
         },
         legend: {
-          font: { color: '#e0e0e0' }
+          font: { color: FONT_COLOR },
+          bgcolor: 'rgba(0,0,0,0)',
+          x: 1, xanchor: 'right',
+          y: 1, yanchor: 'top'
         },
-        margin: { l: 60, r: 20, t: 60, b: 60 }
+        margin: { l: 60, r: 24, t: 50, b: 56 },
+        hoverlabel: {
+          bgcolor: '#1a1a2e',
+          bordercolor: 'rgba(74,158,255,0.2)',
+          font: { color: '#eee', family: 'Inter, sans-serif', size: 12 }
+        }
       }}
-      config={{ displayModeBar: true, responsive: true }}
+      config={{ displayModeBar: false, responsive: true }}
       style={{ width: '100%' }}
     />
   )
@@ -80,13 +96,11 @@ function SurfaceChart({ surface, selectedExpiry }: Props) {
     new Date(e.expiry).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
   )
 
-  const zMatrix = expiries.map((expiry) => {
-    const raw = allStrikes.map((strike) => {
-      const point = expiry.points.find((p) => p.strike === strike)
-      return point ? point.iv : null
-    })
-    return interpolateRow(raw)
-  })
+  const rawMatrix = expiries.map((expiry) => allStrikes.map((strike) => {
+    const point = expiry.points.find((p) => p.strike === strike);
+    return point ? point.iv : null;
+  }))
+  const zMatrix = interpolateSurface(rawMatrix);
 
   return (
     <Plot
@@ -95,31 +109,65 @@ function SurfaceChart({ surface, selectedExpiry }: Props) {
         x: allStrikes,
         y: expiryLabels,
         z: zMatrix,
-        colorscale: 'Viridis',
+        colorscale: [
+          [0, '#7c3aed'],
+          [0.25, '#3b82f6'],
+          [0.5, '#06b6d4'],
+          [0.75, '#34d399'],
+          [1, '#fbbf24']
+        ],
         colorbar: {
-          title: { text: 'IV %', font: { color: '#e0e0e0' } },
-          tickfont: { color: '#e0e0e0' }
+          title: { text: 'IV %', font: { color: FONT_COLOR, size: 12 } },
+          tickfont: { color: FONT_COLOR, size: 11 },
+          thickness: 14,
+          len: 0.6,
+          outlinewidth: 0,
+          bgcolor: 'rgba(0,0,0,0)'
         },
         hovertemplate:
-          'Strike: $%{x}<br>' +
+          'Strike: $%{x:,.0f}<br>' +
           'Expiry: %{y}<br>' +
-          'IV: %{z:.2f}%<extra></extra>'
-      }]}
+          'IV: %{z:.2f}%<extra></extra>',
+        lighting: {
+          ambient: 0.7,
+          diffuse: 0.5,
+          specular: 0.3,
+          roughness: 0.5
+        },
+        contours: {
+          z: {
+            show: true,
+            usecolormap: true,
+            highlightcolor: 'rgba(255,255,255,0.1)',
+            project: { z: false }
+          }
+        }
+      } as any]}
+
       layout={{
         autosize: true,
         height: 600,
-        paper_bgcolor: '#1a1a2e',
-        plot_bgcolor: '#1a1a2e',
-        font: { color: '#e0e0e0' },
+        paper_bgcolor: CHART_BG,
+        plot_bgcolor: CHART_BG,
+        font: { color: FONT_COLOR, family: 'Inter, sans-serif', size: 11 },
         scene: {
-          xaxis: { title: { text: 'Strike ($)' }, gridcolor: '#2a2a4a', color: '#e0e0e0' },
-          yaxis: { title: { text: 'Expiry' }, gridcolor: '#2a2a4a', color: '#e0e0e0' },
-          zaxis: { title: { text: 'IV %' }, gridcolor: '#2a2a4a', color: '#e0e0e0' },
-          bgcolor: '#0a0a0f'
+          xaxis: { title: { text: 'Strike ($)' }, gridcolor: GRID_COLOR, color: FONT_COLOR, showbackground: false },
+          yaxis: { title: { text: 'Expiry' }, gridcolor: GRID_COLOR, color: FONT_COLOR, showbackground: false },
+          zaxis: { title: { text: 'IV %' }, gridcolor: GRID_COLOR, color: FONT_COLOR, showbackground: false },
+          bgcolor: SCENE_BG,
+          camera: {
+            eye: { x: 1.6, y: -1.6, z: 0.9 },
+            up: { x: 0, y: 0, z: 1 }
+          }
         },
-        margin: { l: 0, r: 0, t: 0, b: 0 }
+        margin: { l: 0, r: 0, t: 0, b: 0 },
+        hoverlabel: {
+          bgcolor: '#1a1a2e',
+          bordercolor: 'rgba(74,158,255,0.2)',
+          font: { color: '#eee', family: 'Inter, sans-serif', size: 12 }
+        }
       }}
-      config={{ displayModeBar: true, responsive: true }}
+      config={{ displayModeBar: false, responsive: true }}
       style={{ width: '100%' }}
     />
   )
@@ -129,14 +177,14 @@ export default function VolSurface({ surface, selectedExpiry }: Props) {
   if (selectedExpiry) {
     const expiry = surface.expiries.find((e) => e.expiry === selectedExpiry);
     if (expiry) return (
-      <div style={{ background: '#1a1a2e', border: '1px solid #2a2a4a', borderRadius: '8px', padding: '16px' }}>
+      <div className="chart-container">
         <SmileChart expiry={expiry} />
       </div>
     )
   }
 
   return (
-    <div style={{ background: '#1a1a2e', border: '1px solid #2a2a4a', borderRadius: '8px', padding: '16px' }}>
+    <div className="chart-container">
       <SurfaceChart surface={surface} selectedExpiry={selectedExpiry} />
     </div>
   )

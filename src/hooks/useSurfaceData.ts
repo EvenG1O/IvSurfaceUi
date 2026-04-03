@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import type { IvSurface } from '../types'
 
-const API_BASE_URL = 'https://localhost:51979'
+const API_BASE_URL = import.meta.env.VITE_API_URL
 const CACHE_TTL_MS = 5 * 60 * 1000
 
 interface CacheEntry {
@@ -37,7 +37,7 @@ export function useSurfaceData(currency: string) {
         cache.current[currency] = { data, fetched: Date.now() }
         setSurface(data)
       } catch {
-        setError('Failed to fetch surface data. Is the API running?')
+        setError('Failed to fetch surface data.')
       } finally {
         setLoading(false)
       }
