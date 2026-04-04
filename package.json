@@ -1,5 +1,6 @@
 {
   "name": "iv-surface-ui",
+  "homepage": "https://EvenG1O.github.io/IvSurfaceUi/",
   "private": true,
   "version": "0.0.0",
   "type": "module",
@@ -7,7 +8,9 @@
     "dev": "vite",
     "build": "tsc -b && vite build",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "predeoploy" : "npm run build",
+    "deploy": "gh-pages -d dist"
   },
   "dependencies": {
     "plotly.js": "^3.4.0",
