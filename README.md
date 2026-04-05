@@ -1,13 +1,12 @@
-# iv-surface-ui
+# Real-Time Volatility Surface UI
 
-React frontend for visualizing the BTC/ETH Implied Volatility Surface. This is a pure UI layer — it contains no data fetching logic of its own beyond calling the backend API.
+A React frontend that visualizes live BTC and ETH implied volatility data. 
 
-## What This Is
+This repository acts purely as a UI layer, establishing a real-time WebSocket connection to the [.NET Backend](https://github.com/EvenG1O/DotNetVolSurface) to stream Deribit options data.
 
-This repo is the frontend only. It:
-- Fetches IV surface data from the [iv-surface-engine](https://github.com/EvenG1O/DotNetVolSurface) backend API
-- Renders a live 3D volatility surface using Plotly.js
-- Switches to a 2D vol smile chart when a single expiry is selected
-- Supports BTC and ETH
+## Features
+- **Live 3D Volatility Surfaces** using Plotly.js.
+- **Dynamic 2D Volatility Smiles** for single expiries.
+- **WebSocket Integration** for low-latency market updates.
+- **Automated Deployment** to GitHub Pages via `npm run deploy`.
 
-All data comes from the backend. Without the backend running, this UI will show an error.
